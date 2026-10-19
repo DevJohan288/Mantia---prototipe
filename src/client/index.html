@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel principal · Mantia</title>
+  <meta name="description" content="Mantia: solicitudes, revisión, cotizaciones e historial.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="/js/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <div class="app">
+    <header class="app-header">
+      <h1 class="brand">
+        <a href="#panel" aria-label="Mantia, ir al panel principal">
+          <span class="brand-mark" aria-hidden="true">M</span>
+          <span class="brand-name">Mantia</span>
+        </a>
+      </h1>
+
+      <nav class="main-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="#panel" data-nav="panel">Panel principal</a></li>
+          <li><a href="#solicitudes" data-nav="solicitudes">Solicitudes</a></li>
+          <li><a href="#revision" data-nav="revision">Revisión</a></li>
+          <li><a href="#cotizaciones" data-nav="cotizaciones">Cotizaciones</a></li>
+          <li><a href="#historial" data-nav="historial">Historial</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="app-main" id="contenido" tabindex="-1">
+      <section class="view" data-view="panel" aria-labelledby="titulo-panel">
+        <header class="view-header">
+          <h2 id="titulo-panel" tabindex="-1">Panel principal</h2>
+          <p class="lead">Vista general de los módulos de Mantia.</p>
+        </header>
+
+        <p class="notice">
+          Todavía no hay datos registrados. Los indicadores se mostrarán aquí cuando existan
+          registros reales.
+        </p>
+
+        <h3 class="section-title">Módulos</h3>
+        <ul class="card-grid">
+          <li class="card">
+            <div class="card-head">
+              <h4>Solicitudes</h4>
+              <span class="badge">Sin datos</span>
+            </div>
+            <p>Aún no hay solicitudes registradas.</p>
+            <a class="card-link" href="#solicitudes">Ir a Solicitudes</a>
+          </li>
+          <li class="card">
+            <div class="card-head">
+              <h4>Revisión</h4>
+              <span class="badge">Sin datos</span>
+            </div>
+            <p>No hay elementos para revisar.</p>
+            <a class="card-link" href="#revision">Ir a Revisión</a>
+          </li>
+          <li class="card">
+            <div class="card-head">
+              <h4>Cotizaciones</h4>
+              <span class="badge">Sin datos</span>
+            </div>
+            <p>Aún no hay cotizaciones generadas.</p>
+            <a class="card-link" href="#cotizaciones">Ir a Cotizaciones</a>
+          </li>
+          <li class="card">
+            <div class="card-head">
+              <h4>Historial</h4>
+              <span class="badge">Sin datos</span>
+            </div>
+            <p>Aún no hay actividad registrada.</p>
+            <a class="card-link" href="#historial">Ir a Historial</a>
+          </li>
+        </ul>
+      </section>
+
+      <section class="view" data-view="solicitudes" aria-labelledby="titulo-solicitudes">
+        <header class="view-header">
+          <h2 id="titulo-solicitudes" tabindex="-1">Solicitudes</h2>
+          <p class="lead">Registro y seguimiento de las solicitudes recibidas.</p>
+        </header>
+        <div class="empty-state">
+          <p class="empty-title">Aún no hay solicitudes registradas.</p>
+          <p>Este módulo se implementará en una etapa posterior.</p>
+        </div>
+      </section>
+
+      <section class="view" data-view="revision" aria-labelledby="titulo-revision">
+        <header class="view-header">
+          <h2 id="titulo-revision" tabindex="-1">Revisión</h2>
+          <p class="lead">Revisión de las solicitudes antes de avanzar a la siguiente etapa.</p>
+        </header>
+        <div class="empty-state">
+          <p class="empty-title">No hay elementos para revisar.</p>
+          <p>Este módulo se implementará en una etapa posterior.</p>
+        </div>
+      </section>
+
+      <section class="view" data-view="cotizaciones" aria-labelledby="titulo-cotizaciones">
+        <header class="view-header">
+          <h2 id="titulo-cotizaciones" tabindex="-1">Cotizaciones</h2>
+          <p class="lead">Elaboración y consulta de cotizaciones.</p>
+        </header>
+        <div class="empty-state">
+          <p class="empty-title">Aún no hay cotizaciones generadas.</p>
+          <p>Este módulo se implementará en una etapa posterior.</p>
+        </div>
+      </section>
+
+      <section class="view" data-view="historial" aria-labelledby="titulo-historial">
+        <header class="view-header">
+          <h2 id="titulo-historial" tabindex="-1">Historial</h2>
+          <p class="lead">Consulta de la actividad registrada.</p>
+        </header>
+        <div class="empty-state">
+          <p class="empty-title">Aún no hay actividad registrada.</p>
+          <p>Este módulo se implementará en una etapa posterior.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>Mantia · Interfaz base sin datos conectados.</p>
+    </footer>
+  </div>
+</body>
+</html>
