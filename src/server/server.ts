@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { DEFAULT_PORT } from "./config";
+import { handleRequestRoutes } from "./routes/requestRoutes";
 import { handleStaticRequest } from "./routes/staticRoutes";
 
 function readPort(): number {
@@ -23,7 +24,10 @@ try {
 }
 
 const server = createServer((req, res) => {
-  handleStaticRequest(req, res).catch((error: unknown) => {
+  const requestHandler = req.url?.startsWith("/api/requests")
+    ? handleRequestRoutes(req, res)
+    : handleStaticRequest(req, res);
+  requestHandler.catch((error: unknown) => {
     console.error("Error no controlado al atender la solicitud:", error);
     if (res.headersSent) {
       res.destroy();

@@ -40,8 +40,8 @@
         </header>
 
         <p class="notice">
-          Todavía no hay datos registrados. Los indicadores se mostrarán aquí cuando existan
-          registros reales.
+          El panel de seguimiento y sus indicadores se implementarán en una etapa posterior.
+          Las solicitudes registradas ya se pueden consultar en los módulos Solicitudes y Revisión.
         </p>
 
         <h3 class="section-title">Módulos</h3>
@@ -49,17 +49,17 @@
           <li class="card">
             <div class="card-head">
               <h4>Solicitudes</h4>
-              <span class="badge">Sin datos</span>
+              <span class="badge">Disponible</span>
             </div>
-            <p>Aún no hay solicitudes registradas.</p>
+            <p>Registre y consulte las solicitudes recibidas.</p>
             <a class="card-link" href="#solicitudes">Ir a Solicitudes</a>
           </li>
           <li class="card">
             <div class="card-head">
               <h4>Revisión</h4>
-              <span class="badge">Sin datos</span>
+              <span class="badge">Disponible</span>
             </div>
-            <p>No hay elementos para revisar.</p>
+            <p>Valide las solicitudes y registre decisiones de revisión.</p>
             <a class="card-link" href="#revision">Ir a Revisión</a>
           </li>
           <li class="card">
@@ -86,10 +86,38 @@
           <h2 id="titulo-solicitudes" tabindex="-1">Solicitudes</h2>
           <p class="lead">Registro y seguimiento de las solicitudes recibidas.</p>
         </header>
-        <div class="empty-state">
-          <p class="empty-title">Aún no hay solicitudes registradas.</p>
-          <p>Este módulo se implementará en una etapa posterior.</p>
+        <form class="request-form" id="request-form">
+          <h3>Registrar solicitud</h3>
+          <div class="form-grid">
+            <label>Nombre del cliente
+              <input name="customerName" required maxlength="120" autocomplete="name">
+            </label>
+            <label>Correo electrónico
+              <input name="contactEmail" type="email" maxlength="254" autocomplete="email">
+            </label>
+            <label>Teléfono
+              <input name="contactPhone" type="tel" maxlength="30" autocomplete="tel">
+            </label>
+            <label>Fecha preferida (opcional)
+              <input name="preferredDate" type="date">
+            </label>
+            <label class="form-wide">Dirección del servicio
+              <input name="serviceAddress" required maxlength="300" autocomplete="street-address">
+            </label>
+            <label class="form-wide">Descripción del servicio solicitado
+              <textarea name="serviceDescription" required maxlength="2000" rows="4"></textarea>
+            </label>
+          </div>
+          <p class="form-hint">Indique al menos un medio de contacto: correo o teléfono.</p>
+          <button type="submit">Guardar solicitud</button>
+          <p class="form-message" id="request-form-message" role="status" aria-live="polite"></p>
+        </form>
+        <div class="list-header">
+          <h3>Solicitudes registradas</h3>
+          <button class="button-secondary" id="refresh-requests" type="button">Actualizar lista</button>
         </div>
+        <p class="form-message" id="requests-message" role="status" aria-live="polite"></p>
+        <div class="request-list" id="request-list" aria-live="polite"></div>
       </section>
 
       <section class="view" data-view="revision" aria-labelledby="titulo-revision">
@@ -97,10 +125,8 @@
           <h2 id="titulo-revision" tabindex="-1">Revisión</h2>
           <p class="lead">Revisión de las solicitudes antes de avanzar a la siguiente etapa.</p>
         </header>
-        <div class="empty-state">
-          <p class="empty-title">No hay elementos para revisar.</p>
-          <p>Este módulo se implementará en una etapa posterior.</p>
-        </div>
+        <p class="form-message" id="review-message" role="status" aria-live="polite"></p>
+        <div class="request-list" id="review-list" aria-live="polite"></div>
       </section>
 
       <section class="view" data-view="cotizaciones" aria-labelledby="titulo-cotizaciones">
@@ -127,7 +153,7 @@
     </main>
 
     <footer class="app-footer">
-      <p>Mantia · Interfaz base sin datos conectados.</p>
+      <p>Mantia · Gestión local de solicitudes y revisión.</p>
     </footer>
   </div>
 </body>

@@ -7,6 +7,7 @@ import { resolve } from "node:path";
 export const PROJECT_ROOT: string = resolve(__dirname, "..", "..");
 
 export const DEFAULT_PORT = 3000;
+export const REQUESTS_FILE: string = resolve(PROJECT_ROOT, "data", "requests", "requests.json");
 
 /** Única página HTML servida. Se sirve por ruta exacta, no como carpeta. */
 export const INDEX_FILE: string = resolve(PROJECT_ROOT, "src", "client", "index.html");

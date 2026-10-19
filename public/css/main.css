@@ -259,6 +259,129 @@ body {
   font-weight: 600;
 }
 
+.request-form,
+.request-card {
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.request-form h3,
+.list-header h3 {
+  margin: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form-grid label,
+.review-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.form-wide {
+  grid-column: 1 / -1;
+}
+
+.form-grid input,
+.form-grid textarea,
+.review-form textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.35rem;
+  color: var(--color-text);
+  font: inherit;
+}
+
+.form-hint,
+.form-message {
+  margin: 0.75rem 0;
+  color: var(--color-muted);
+}
+
+.form-message:empty {
+  display: none;
+}
+
+.form-message.is-error {
+  color: #a31212;
+}
+
+button {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.9rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: var(--color-accent);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.button-secondary {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.list-header,
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.request-details {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.3fr) 1fr;
+  gap: 0.25rem 1rem;
+  margin: 1rem 0;
+}
+
+.request-details dt {
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.request-details dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.review-form {
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.review-actions {
+  justify-content: flex-start;
+  margin-bottom: 0;
+}
+
+.request-list .empty-state {
+  margin: 0;
+}
+
 .app-footer {
   padding: 1rem;
   border-top: 1px solid var(--color-border);
