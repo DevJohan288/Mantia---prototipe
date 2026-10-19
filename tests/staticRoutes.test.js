@@ -2,16 +2,29 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 const { resolveStaticPath } = require("../dist/server/routes/staticRoutes");
 
 test("sirve la página principal", () => {
   assert.ok(resolveStaticPath("/")?.endsWith("index.html"));
   assert.ok(resolveStaticPath("/index.html")?.endsWith("index.html"));
+  assert.ok(resolveStaticPath("/login")?.endsWith("login.html"));
+  assert.ok(resolveStaticPath("/login.html")?.endsWith("login.html"));
+  assert.ok(resolveStaticPath("/setup")?.endsWith("login.html"));
+  assert.ok(resolveStaticPath("/setup.html")?.endsWith("login.html"));
 });
 
 test("permite CSS y JavaScript compilado del cliente", () => {
   assert.ok(resolveStaticPath("/css/main.css")?.endsWith("main.css"));
   assert.ok(resolveStaticPath("/js/main.js")?.endsWith("main.js"));
+});
+
+test("compila el script del navegador sin envoltorio CommonJS", () => {
+  const script = readFileSync(resolveStaticPath("/js/main.js"), "utf8");
+  assert.doesNotMatch(script, /Object\.defineProperty\(exports/);
+  assert.doesNotMatch(script, /\bexports\./);
+  assert.match(script, /addEventListener\("hashchange"/);
+  assert.match(script, /getElementById\("request-form"\)/);
 });
 
 test("bloquea carpetas y archivos internos", () => {

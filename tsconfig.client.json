@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "rootDir": "./src/client/scripts",
+    "outDir": "./dist/client/scripts",
+    "types": [],
+    "sourceMap": false
+  },
+  "include": ["src/client/scripts/*.ts"],
+  "exclude": ["node_modules", "dist", "tests"]
+}

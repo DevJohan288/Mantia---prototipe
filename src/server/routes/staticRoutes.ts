@@ -2,7 +2,7 @@ import { createReadStream } from "node:fs";
 import { realpath, stat } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { extname, resolve, sep } from "node:path";
-import { INDEX_FILE, STATIC_MOUNTS } from "../config";
+import { INDEX_FILE, LOGIN_FILE, STATIC_MOUNTS } from "../config";
 
 /** Extensiones públicas permitidas. Todo lo demás (.ts, .map, .json, ...) se rechaza. */
 const MIME_TYPES: Readonly<Record<string, string>> = {
@@ -55,6 +55,10 @@ export function resolveStaticPath(pathname: string): string | null {
   if (pathname === "/" || pathname === "/index.html") {
     return INDEX_FILE;
   }
+  if (pathname === "/login" || pathname === "/login.html"
+    || pathname === "/setup" || pathname === "/setup.html") {
+    return LOGIN_FILE;
+  }
 
   const mount = STATIC_MOUNTS.find((candidate) => pathname.startsWith(candidate.urlPrefix));
   if (mount === undefined) {
@@ -76,7 +80,7 @@ export function resolveStaticPath(pathname: string): string | null {
 
 /** Comprueba que, tras resolver enlaces simbólicos, el archivo sigue dentro de su montaje. */
 async function isInsideMount(filePath: string): Promise<boolean> {
-  if (filePath === INDEX_FILE) {
+  if (filePath === INDEX_FILE || filePath === LOGIN_FILE) {
     return true;
   }
   const mount = STATIC_MOUNTS.find((candidate) => filePath.startsWith(candidate.directory + sep));

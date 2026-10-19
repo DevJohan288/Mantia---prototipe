@@ -7,7 +7,7 @@
   "main": "dist/server/server.js",
   "type": "commonjs",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.json",
     "start": "node dist/server/server.js",
     "test": "node --test"
   },

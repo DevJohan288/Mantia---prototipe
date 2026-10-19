@@ -8,9 +8,13 @@ export const PROJECT_ROOT: string = resolve(__dirname, "..", "..");
 
 export const DEFAULT_PORT = 3000;
 export const REQUESTS_FILE: string = resolve(PROJECT_ROOT, "data", "requests", "requests.json");
+export const AUTH_USER_FILE: string = resolve(PROJECT_ROOT, "data", "auth", "user.json");
+export const SESSION_COOKIE_NAME = "mantia_session";
+export const SESSION_DURATION_SECONDS = 8 * 60 * 60;
 
-/** Única página HTML servida. Se sirve por ruta exacta, no como carpeta. */
+/** Páginas HTML permitidas, servidas por ruta exacta y nunca como directorio. */
 export const INDEX_FILE: string = resolve(PROJECT_ROOT, "src", "client", "index.html");
+export const LOGIN_FILE: string = resolve(PROJECT_ROOT, "src", "client", "login.html");
 
 export interface StaticMount {
   /** Prefijo de URL, siempre con barra inicial y final. */

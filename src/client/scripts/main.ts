@@ -103,6 +103,9 @@
     const response = await fetch(path, options);
     const result: unknown = await response.json();
     if (!response.ok) {
+      if (response.status === 401) {
+        window.location.assign("/login");
+      }
       const message = typeof result === "object" && result !== null && "error" in result
         ? String(result.error)
         : "No se pudo completar la operación.";
@@ -270,6 +273,29 @@
         true,
       ),
     );
+  });
+  document.getElementById("logout-button")?.addEventListener("click", async () => {
+    const button = document.getElementById("logout-button");
+    if (button instanceof HTMLButtonElement) {
+      button.disabled = true;
+    }
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      if (!response.ok) {
+        throw new Error("No se pudo cerrar la sesión.");
+      }
+      await response.json();
+      window.location.assign("/login");
+    } catch (error) {
+      setMessage("requests-message", error instanceof Error ? error.message : "No se pudo cerrar la sesión.", true);
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = false;
+      }
+    }
   });
   loadRequests().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : "No se pudieron cargar las solicitudes.";

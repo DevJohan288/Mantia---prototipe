@@ -88,6 +88,12 @@ body {
   color: var(--color-nav-text);
 }
 
+.logout-button {
+  margin-top: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: transparent;
+}
+
 .brand {
   margin: 0 0 0.5rem;
   font-size: 1.25rem;
@@ -382,6 +388,46 @@ button:disabled {
   margin: 0;
 }
 
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 1rem;
+}
+
+.login-card {
+  width: min(100%, 26rem);
+  padding: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: 0 1rem 3rem rgba(23, 32, 47, 0.1);
+}
+
+.login-card .brand-mark {
+  margin: 0 auto;
+}
+
+.login-card h1,
+.login-card > p {
+  text-align: center;
+}
+
+.login-card form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.login-card input {
+  min-height: 2.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.35rem;
+  font: inherit;
+}
+
 .app-footer {
   padding: 1rem;
   border-top: 1px solid var(--color-border);
@@ -413,6 +459,11 @@ button:disabled {
 
   .brand {
     margin-bottom: 1.5rem;
+  }
+
+  .logout-button {
+    width: 100%;
+    margin-top: 2rem;
   }
 
   .main-nav ul {
