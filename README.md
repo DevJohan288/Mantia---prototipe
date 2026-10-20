@@ -5,6 +5,12 @@ El servidor usa HTTP nativo de Node.js, la interfaz usa HTML/CSS/TypeScript y lo
 se guardan localmente en archivos JSON. No se utilizan frameworks de interfaz ni servicios
 externos.
 
+## Documentación para entrega
+
+La [guía técnica del proyecto](./docs/guia-tecnica.md) describe la arquitectura, los
+flujos de negocio, los contratos HTTP, las reglas de cotización, la persistencia, las
+pruebas y las limitaciones conocidas.
+
 ## Requisitos y ejecución
 
 - Node.js compatible con la versión de TypeScript definida en `package-lock.json`.
@@ -57,8 +63,8 @@ La vigencia es inclusiva y se valida por código de servicio, sin permitir perí
 solapados para una misma tarifa. Si falta una tarifa para el servicio y fecha consultados,
 el servicio devuelve explícitamente `no_applicable_tariff`; no inventa importes.
 
-La consulta `findTariffOnDate` requiere una fecha explícita. Aún está pendiente decidir
-La API de solo lectura, protegida por sesión, expone `GET /api/catalog` y
+La consulta `findTariffOnDate` requiere una fecha explícita. La API de solo lectura,
+protegida por sesión, expone `GET /api/catalog` y
 `GET /api/catalog/tariffs?serviceCode=AA-01&date=2026-10-01`. La vista Catálogo permite
 consultar servicios, versiones y vigencias en la interfaz.
 
