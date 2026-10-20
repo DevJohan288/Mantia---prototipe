@@ -35,6 +35,10 @@ La cookie es `HttpOnly` y `SameSite=Strict`; cerrar sesión invalida la sesión 
 La aplicación escucha únicamente en `127.0.0.1` y no está preparada para acceso desde
 otros equipos.
 
+Credenciales:
+Usuario: admin
+Contraseña: *contraseña*
+
 ## Solicitudes y revisión
 
 El primer bloque permite registrar solicitudes con nombre del cliente, al menos un medio
