@@ -97,14 +97,6 @@ ya que no existe calendario aprobado. También requieren revisión los horarios 
 fuera de 08:00–18:00, los cruces de las 18:00 y de medianoche, tarifas ausentes, servicios
 no catalogados y evaluación técnica incompleta o fuera del alcance.
 
-## Alcance pendiente
-
-La aplicación no implementa un calendario automático de festivos. Los datos de solicitudes
-aprobadas solo están relacionados por identificador; el detalle de conceptos, cantidades,
-evaluaciones técnicas, ciudad y horario se completa explícitamente al preparar la cotización.
-Los bloqueos del motor se muestran como revisión manual, pero no se guardan en una cola ni
-cambian el estado original de la solicitud.
-
 ## Integración y emisión de cotizaciones (Fase 5)
 
 Las operaciones de cotización requieren la sesión local existente. La API incorpora:
