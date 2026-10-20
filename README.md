@@ -91,13 +91,38 @@ ya que no existe calendario aprobado. También requieren revisión los horarios 
 fuera de 08:00–18:00, los cruces de las 18:00 y de medianoche, tarifas ausentes, servicios
 no catalogados y evaluación técnica incompleta o fuera del alcance.
 
-No se ha añadido API ni interfaz de cotizaciones, envío por correo, importación histórica,
-edición de tarifas ni gestión de revisiones. La siguiente integración deberá suministrar
-los conceptos, evaluaciones técnicas y estado comprobado de festivo sin modificar el módulo
-de solicitudes.
-
 ## Alcance pendiente
 
-La fase no implementa la interfaz ni una ruta HTTP para el motor, ni un calendario automático
-de festivos. Los datos de solicitudes aprobadas solo están relacionados por identificador;
-el detalle para cotizar debe aportarlo una futura integración.
+La aplicación no implementa un calendario automático de festivos. Los datos de solicitudes
+aprobadas solo están relacionados por identificador; el detalle de conceptos, cantidades,
+evaluaciones técnicas, ciudad y horario se completa explícitamente al preparar la cotización.
+Los bloqueos del motor se muestran como revisión manual, pero no se guardan en una cola ni
+cambian el estado original de la solicitud.
+
+## Integración y emisión de cotizaciones (Fase 5)
+
+Las operaciones de cotización requieren la sesión local existente. La API incorpora:
+
+- `GET /api/quotes/eligible`: solicitudes aprobadas que todavía no tienen cotización emitida.
+- `GET /api/quotes`: snapshots de cotizaciones emitidas.
+- `GET /api/quotes/:id`: detalle persistido de una cotización emitida.
+- `POST /api/quotes/calculate`: calcula una propuesta sin persistirla ni emitirla.
+- `POST /api/quotes/issue`: vuelve a validar la solicitud y recalcula en el servidor antes
+  de emitir y guardar. El cliente no puede definir precios, IVA, recargos ni totales.
+
+Los cuerpos JSON se limitan a 32 KB y los campos inesperados se rechazan. La solicitud debe
+seguir aprobada al calcular y emitir. Solo se permite una cotización emitida por solicitud;
+un reintento o una segunda emisión responde con conflicto y conserva el registro existente.
+El snapshot conserva el indicador explícito de festivo además de las tarifas y los cálculos.
+
+La vista Cotizaciones permite seleccionar solicitudes aprobadas, ingresar ciudad, fecha y
+horario, agregar conceptos y cantidades y declarar la evaluación técnica y el festivo.
+Calcular y emitir son acciones separadas; antes de emitir se solicita confirmación. Los
+bloqueos muestran sus motivos y evitan la emisión. Se pueden consultar las cotizaciones
+emitidas y desplegar sus conceptos y snapshots. El ingreso a la vista no crea ni emite
+cotizaciones.
+
+Los casos bloqueados no se persisten como cotizaciones pendientes ni tienen una cola de
+revisión; la interfaz indica que requieren atención manual. La Fase 5 no cambia solicitudes
+ni autenticación, no crea revisiones, no envía correos, no importa históricos y no incluye
+panel de seguimiento.

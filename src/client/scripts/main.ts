@@ -63,9 +63,13 @@
     isHoliday: boolean;
     lines: QuoteLineInput[];
   }
-  interface QuoteLineSnapshot extends QuoteLineInput {
+  interface QuoteLineSnapshot {
+    serviceCode: string;
     description: string;
     unit: string;
+    quantity: number;
+    technicalAssessment?: TechnicalAssessment;
+    technicalNotes?: string;
     unitPriceCop: number;
     amountCop: number;
     surchargeRatePercent: number;
@@ -130,6 +134,7 @@
   let quoteCatalog: CatalogData | null = null;
   let currentQuoteProposal: QuoteView | null = null;
   let calculatedInputSnapshot = "";
+  let quoteEligibleRequests = new Map<string, RequestRecord>();
 
   if (views.length === 0) {
     console.error(`${APP_NAME}: no se encontraron vistas en la página.`);
@@ -314,6 +319,7 @@
       reviewEmpty.className = "empty-state";
       reviewEmpty.textContent = "No hay solicitudes pendientes de revisión.";
       reviewList.append(reviewEmpty);
+      void loadDashboard();
       return;
     }
     for (const request of requests) {
@@ -327,6 +333,54 @@
       empty.className = "empty-state";
       empty.textContent = "No hay solicitudes pendientes de revisión.";
       reviewList.append(empty);
+    }
+    void loadDashboard();
+  }
+
+  async function loadDashboard(): Promise<void> {
+    const countElements: Record<RequestStatus | "issued", HTMLElement | null> = {
+      pending_review: document.getElementById("dashboard-pending-review"),
+      needs_information: document.getElementById("dashboard-needs-information"),
+      approved: document.getElementById("dashboard-approved"),
+      rejected: document.getElementById("dashboard-rejected"),
+      issued: document.getElementById("dashboard-issued-quotes"),
+    };
+    if (Object.values(countElements).some((element) => element === null)) {
+      return;
+    }
+    try {
+      const [requests, quotes] = await Promise.all([
+        requestApi<RequestRecord[]>("/api/requests"),
+        requestApi<QuoteView[]>("/api/quotes"),
+      ]);
+      const counts: Record<RequestStatus | "issued", number> = {
+        pending_review: 0,
+        needs_information: 0,
+        approved: 0,
+        rejected: 0,
+        issued: quotes.filter((quote) => quote.status === "issued").length,
+      };
+      for (const request of requests) {
+        counts[request.status] += 1;
+      }
+      for (const status of ["pending_review", "needs_information", "approved", "rejected", "issued"] as const) {
+        const element = countElements[status];
+        if (element !== null) {
+          element.textContent = String(counts[status]);
+        }
+      }
+      setMessage("dashboard-message", "");
+    } catch (error) {
+      for (const element of Object.values(countElements)) {
+        if (element !== null) {
+          element.textContent = "—";
+        }
+      }
+      setMessage(
+        "dashboard-message",
+        error instanceof Error ? `No se pudieron cargar los indicadores: ${error.message}` : "No se pudieron cargar los indicadores.",
+        true,
+      );
     }
   }
 
@@ -413,6 +467,456 @@
       setMessage("catalog-message", text, true);
     }
   }
+
+  function invalidateQuoteProposal(): void {
+    if (currentQuoteProposal !== null) {
+      currentQuoteProposal = null;
+      calculatedInputSnapshot = "";
+      const issueButton = document.getElementById("quote-issue");
+      if (issueButton instanceof HTMLButtonElement) {
+        issueButton.hidden = true;
+      }
+      setMessage("quote-message", "Los datos cambiaron. Calcule de nuevo antes de emitir.");
+    }
+  }
+
+  function createQuoteLineRow(): HTMLElement {
+    const fieldset = document.createElement("fieldset");
+    fieldset.className = "quote-line";
+    const legend = document.createElement("legend");
+    legend.textContent = "Concepto";
+    fieldset.append(legend);
+
+    const serviceLabel = document.createElement("label");
+    serviceLabel.textContent = "Servicio";
+    const serviceSelect = document.createElement("select");
+    serviceSelect.dataset["field"] = "serviceCode";
+    serviceSelect.required = true;
+    const servicePlaceholder = document.createElement("option");
+    servicePlaceholder.value = "";
+    servicePlaceholder.textContent = "Seleccione un servicio";
+    serviceSelect.append(servicePlaceholder);
+    for (const service of quoteCatalog?.services.filter((item) => item.category === "service") ?? []) {
+      const option = document.createElement("option");
+      option.value = service.code;
+      option.textContent = `${service.code} · ${service.name}`;
+      serviceSelect.append(option);
+    }
+    serviceLabel.append(serviceSelect);
+
+    const quantityLabel = document.createElement("label");
+    quantityLabel.textContent = "Cantidad";
+    const quantityInput = document.createElement("input");
+    quantityInput.type = "number";
+    quantityInput.min = "0.01";
+    quantityInput.step = "any";
+    quantityInput.required = true;
+    quantityInput.dataset["field"] = "quantity";
+    quantityLabel.append(quantityInput);
+
+    const assessmentLabel = document.createElement("label");
+    assessmentLabel.textContent = "Evaluación técnica";
+    const assessmentSelect = document.createElement("select");
+    assessmentSelect.required = true;
+    assessmentSelect.dataset["field"] = "technicalAssessment";
+    const assessmentOptions: Array<[string, string]> = [
+      ["", "Seleccione"],
+      ["complete", "Información completa y dentro del alcance"],
+      ["incomplete", "Información incompleta"],
+      ["outside_scope", "Fuera del alcance tarifado"],
+    ];
+    for (const [value, text] of assessmentOptions) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = text;
+      assessmentSelect.append(option);
+    }
+    assessmentLabel.append(assessmentSelect);
+
+    const notesLabel = document.createElement("label");
+    notesLabel.textContent = "Notas técnicas (opcional)";
+    const notes = document.createElement("textarea");
+    notes.rows = 2;
+    notes.maxLength = 2000;
+    notes.dataset["field"] = "technicalNotes";
+    notesLabel.append(notes);
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "button-secondary";
+    removeButton.textContent = "Quitar concepto";
+    removeButton.addEventListener("click", () => {
+      fieldset.remove();
+      invalidateQuoteProposal();
+    });
+
+    fieldset.append(serviceLabel, quantityLabel, assessmentLabel, notesLabel, removeButton);
+    return fieldset;
+  }
+
+  function readQuoteInput(): QuoteInput | null {
+    const requestSelect = document.getElementById("quote-request-select");
+    const city = document.getElementById("quote-city");
+    const visitDate = document.getElementById("quote-visit-date");
+    const startTime = document.getElementById("quote-start-time");
+    const duration = document.getElementById("quote-duration");
+    const holiday = document.getElementById("quote-holiday");
+    const urgent = document.getElementById("quote-urgent");
+    const lineContainer = document.getElementById("quote-lines");
+    if (!(requestSelect instanceof HTMLSelectElement)
+      || !(city instanceof HTMLSelectElement)
+      || !(visitDate instanceof HTMLInputElement)
+      || !(startTime instanceof HTMLInputElement)
+      || !(duration instanceof HTMLInputElement)
+      || !(holiday instanceof HTMLSelectElement)
+      || !(urgent instanceof HTMLInputElement)
+      || lineContainer === null) {
+      return null;
+    }
+    const lines: QuoteLineInput[] = [];
+    for (const fieldset of Array.from(lineContainer.querySelectorAll<HTMLElement>(".quote-line"))) {
+      const serviceCode = fieldset.querySelector<HTMLSelectElement>('[data-field="serviceCode"]');
+      const quantity = fieldset.querySelector<HTMLInputElement>('[data-field="quantity"]');
+      const assessment = fieldset.querySelector<HTMLSelectElement>('[data-field="technicalAssessment"]');
+      const technicalNotes = fieldset.querySelector<HTMLTextAreaElement>('[data-field="technicalNotes"]');
+      if (serviceCode === null || quantity === null || assessment === null || technicalNotes === null
+        || assessment.value === "") {
+        return null;
+      }
+      lines.push({
+        serviceCode: serviceCode.value,
+        quantity: Number(quantity.value),
+        technicalAssessment: assessment.value as TechnicalAssessment,
+        ...(technicalNotes.value.trim() === "" ? {} : { technicalNotes: technicalNotes.value.trim() }),
+      });
+    }
+    if (requestSelect.value === ""
+      || (city.value !== "bogota" && city.value !== "chia")
+      || visitDate.value === ""
+      || startTime.value === ""
+      || duration.value === ""
+      || (holiday.value !== "true" && holiday.value !== "false")
+      || lines.length === 0) {
+      return null;
+    }
+    return {
+      requestId: requestSelect.value,
+      city: city.value,
+      visitDate: visitDate.value,
+      startTime: startTime.value,
+      durationMinutes: Number(duration.value),
+      urgent: urgent.checked,
+      isHoliday: holiday.value === "true",
+      lines,
+    };
+  }
+
+  function appendQuoteCell(row: HTMLTableRowElement, text: string, header = false): void {
+    const cell = document.createElement(header ? "th" : "td");
+    if (header) {
+      cell.scope = "col";
+    }
+    cell.textContent = text;
+    row.append(cell);
+  }
+
+  function renderQuoteBreakdown(quote: QuoteView): HTMLElement {
+    const wrapper = document.createElement("div");
+    const details = document.createElement("p");
+    details.textContent = `Emisión: ${quote.emissionDate} · Vence: ${quote.expirationDate} · Visita: ${quote.visitDate}, ${quote.startTime}–${quote.endTime} · ${quote.city === "bogota" ? "Bogotá" : "Chía"}${quote.urgent ? " · Urgente" : ""}${quote.isHoliday ? " · Festivo indicado" : ""}`;
+    wrapper.append(details);
+
+    const table = document.createElement("table");
+    table.className = "quote-breakdown";
+    const head = document.createElement("thead");
+    const header = document.createElement("tr");
+    for (const title of ["Concepto", "Cantidad", "Unidad", "Precio unitario", "Importe", "Recargo", "Versión"]) {
+      appendQuoteCell(header, title, true);
+    }
+    head.append(header);
+    table.append(head);
+    const body = document.createElement("tbody");
+    for (const line of quote.lines) {
+      const row = document.createElement("tr");
+      appendQuoteCell(row, `${line.serviceCode} · ${line.description}`);
+      appendQuoteCell(row, String(line.quantity));
+      appendQuoteCell(row, UNIT_LABELS[line.unit as CatalogService["unit"]] ?? line.unit);
+      appendQuoteCell(row, formatCop(line.unitPriceCop));
+      appendQuoteCell(row, formatCop(line.amountCop));
+      appendQuoteCell(row, line.surchargeCop === 0
+        ? "—"
+        : `${formatCop(line.surchargeCop)} (${line.surchargeRatePercent} %)`);
+      appendQuoteCell(row, line.tariffVersionId);
+      body.append(row);
+    }
+    table.append(body);
+    wrapper.append(table);
+
+    const totals = document.createElement("dl");
+    for (const [label, amount] of [
+      ["Base gravable", quote.taxableBaseCop],
+      [`IVA (${quote.taxRatePercent} %; redondeado una sola vez)`, quote.taxCop],
+      ["Total", quote.totalCop],
+    ] as const) {
+      const term = document.createElement("dt");
+      term.textContent = label;
+      const description = document.createElement("dd");
+      description.textContent = formatCop(amount);
+      if (label === "Total") {
+        description.className = "quote-total";
+      }
+      totals.append(term, description);
+    }
+    wrapper.append(totals);
+    return wrapper;
+  }
+
+  function renderQuoteCalculation(result: QuoteCalculationResult): void {
+    const resultElement = document.getElementById("quote-result");
+    const issueButton = document.getElementById("quote-issue");
+    if (resultElement === null || !(issueButton instanceof HTMLButtonElement)) {
+      return;
+    }
+    resultElement.replaceChildren();
+    currentQuoteProposal = null;
+    calculatedInputSnapshot = "";
+    issueButton.hidden = true;
+
+    if (result.kind === "blocked") {
+      const heading = document.createElement("h4");
+      heading.textContent = "Requiere revisión manual";
+      const message = document.createElement("p");
+      message.textContent = "No se generó una propuesta emitible. Corrija los datos indicados y vuelva a calcular. Si la regla comercial requiere revisión manual, no emita esta cotización.";
+      const list = document.createElement("ul");
+      list.className = "quote-review-reasons";
+      for (const item of result.reasons ?? []) {
+        const entry = document.createElement("li");
+        entry.textContent = item.serviceCode === undefined
+          ? item.message
+          : `${item.serviceCode}: ${item.message}`;
+        list.append(entry);
+      }
+      resultElement.append(heading, message, list);
+      setMessage("quote-message", "La propuesta quedó bloqueada para emisión.", true);
+      return;
+    }
+    if (result.quote === undefined) {
+      setMessage("quote-message", "El servidor devolvió un resultado de cálculo incompleto.", true);
+      return;
+    }
+    currentQuoteProposal = result.quote;
+    const input = readQuoteInput();
+    calculatedInputSnapshot = input === null ? "" : JSON.stringify(input);
+    const heading = document.createElement("h4");
+    heading.textContent = "Propuesta calculada · aún no emitida";
+    resultElement.append(heading, renderQuoteBreakdown(result.quote));
+    issueButton.hidden = false;
+    setMessage("quote-message", "Revise los importes. La propuesta solo se emitirá al confirmar la acción.");
+  }
+
+  function renderIssuedQuotes(quotes: QuoteView[]): void {
+    const container = document.getElementById("issued-quotes-list");
+    if (container === null) {
+      return;
+    }
+    container.replaceChildren();
+    if (quotes.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "empty-state";
+      empty.textContent = "Aún no hay cotizaciones emitidas.";
+      container.append(empty);
+      return;
+    }
+    for (const quote of quotes) {
+      const details = document.createElement("details");
+      details.className = "issued-quote-card";
+      const summary = document.createElement("summary");
+      summary.textContent = `Cotización ${quote.id} · Solicitud ${quote.requestId} · ${formatCop(quote.totalCop)} · emitida ${quote.emissionDate}`;
+      details.append(summary, renderQuoteBreakdown(quote));
+      container.append(details);
+    }
+  }
+
+  async function loadQuoteWorkspace(): Promise<void> {
+    const requestSelect = document.getElementById("quote-request-select");
+    const lineContainer = document.getElementById("quote-lines");
+    if (!(requestSelect instanceof HTMLSelectElement) || lineContainer === null) {
+      return;
+    }
+    try {
+      await loadCatalog();
+      if (quoteCatalog === null) {
+        throw new Error("No se pudo cargar el catálogo de servicios.");
+      }
+      const [eligible, issued] = await Promise.all([
+        requestApi<RequestRecord[]>("/api/quotes/eligible"),
+        requestApi<QuoteView[]>("/api/quotes"),
+      ]);
+      const previousValue = requestSelect.value;
+      quoteEligibleRequests = new Map(eligible.map((request) => [request.id, request]));
+      requestSelect.replaceChildren();
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = eligible.length === 0
+        ? "No hay solicitudes aprobadas disponibles"
+        : "Seleccione una solicitud";
+      requestSelect.append(placeholder);
+      for (const request of eligible) {
+        const option = document.createElement("option");
+        option.value = request.id;
+        option.textContent = `${request.customerName} · ${request.id}`;
+        requestSelect.append(option);
+      }
+      if (eligible.some((request) => request.id === previousValue)) {
+        requestSelect.value = previousValue;
+      } else {
+        const requestDetails = document.getElementById("quote-request-details");
+        requestDetails?.replaceChildren();
+      }
+      renderIssuedQuotes(issued);
+      if (lineContainer.childElementCount === 0) {
+        lineContainer.append(createQuoteLineRow());
+      }
+      setMessage("quote-message", "");
+    } catch (error) {
+      setMessage(
+        "quote-message",
+        error instanceof Error ? error.message : "No se pudieron cargar los datos de cotización.",
+        true,
+      );
+    }
+  }
+
+  const quoteRequestSelect = document.getElementById("quote-request-select");
+  if (quoteRequestSelect instanceof HTMLSelectElement) {
+    quoteRequestSelect.addEventListener("change", () => {
+      const details = document.getElementById("quote-request-details");
+      const selected = quoteRequestSelect.value;
+      if (details !== null) {
+        details.replaceChildren();
+        if (selected !== "") {
+          const request = quoteEligibleRequests.get(selected);
+          if (request !== undefined) {
+            const info = document.createElement("dl");
+            const values: Array<[string, string]> = [
+              ["Cliente", request.customerName],
+              ["Descripción solicitada", request.serviceDescription],
+              ["Dirección", request.serviceAddress],
+              ["Fecha preferida", request.preferredDate ?? "No indicada"],
+            ];
+            for (const [label, value] of values) {
+              const term = document.createElement("dt");
+              term.textContent = label;
+              const description = document.createElement("dd");
+              description.textContent = value;
+              info.append(term, description);
+            }
+            details.append(info);
+          }
+        }
+      }
+      invalidateQuoteProposal();
+    });
+  }
+
+  const quoteForm = document.getElementById("quote-form");
+  const quoteIssueButton = document.getElementById("quote-issue");
+  if (quoteForm instanceof HTMLFormElement) {
+    quoteForm.addEventListener("input", invalidateQuoteProposal);
+    quoteForm.addEventListener("change", invalidateQuoteProposal);
+    quoteForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const requestSelect = document.getElementById("quote-request-select");
+      if (!quoteForm.reportValidity()) {
+        return;
+      }
+      if (!(requestSelect instanceof HTMLSelectElement) || requestSelect.value === "") {
+        setMessage("quote-message", "Seleccione una solicitud aprobada.", true);
+        return;
+      }
+      const input = readQuoteInput();
+      if (input === null) {
+        setMessage("quote-message", "Complete todos los datos requeridos para calcular.", true);
+        return;
+      }
+      const button = document.getElementById("quote-calculate");
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = true;
+      }
+      if (quoteIssueButton instanceof HTMLButtonElement) {
+        quoteIssueButton.hidden = true;
+      }
+      setMessage("quote-message", "Calculando la propuesta…");
+      try {
+        const result = await requestApi<QuoteCalculationResult>("/api/quotes/calculate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input),
+        });
+        renderQuoteCalculation(result);
+      } catch (error) {
+        setMessage("quote-message", error instanceof Error ? error.message : "No se pudo calcular la propuesta.", true);
+      } finally {
+        if (button instanceof HTMLButtonElement) {
+          button.disabled = false;
+        }
+      }
+    });
+  }
+
+  if (quoteIssueButton instanceof HTMLButtonElement) {
+    quoteIssueButton.addEventListener("click", async () => {
+      if (currentQuoteProposal === null) {
+        setMessage("quote-message", "Calcule una propuesta válida antes de emitir.", true);
+        return;
+      }
+      const input = readQuoteInput();
+      if (input === null || JSON.stringify(input) !== calculatedInputSnapshot) {
+        invalidateQuoteProposal();
+        setMessage("quote-message", "Los datos ya no corresponden a la propuesta. Calcule de nuevo.", true);
+        return;
+      }
+      if (!window.confirm("¿Confirma la emisión? La cotización quedará guardada y no podrá sobrescribirse.")) {
+        return;
+      }
+      quoteIssueButton.disabled = true;
+      try {
+        const issued = await requestApi<QuoteView>("/api/quotes/issue", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input),
+        });
+        currentQuoteProposal = null;
+        calculatedInputSnapshot = "";
+        quoteIssueButton.hidden = true;
+        const resultElement = document.getElementById("quote-result");
+        if (resultElement !== null) {
+          const heading = document.createElement("h4");
+          heading.textContent = "Cotización emitida y guardada";
+          resultElement.replaceChildren(heading, renderQuoteBreakdown(issued));
+        }
+        setMessage("quote-message", `Se emitió la cotización ${issued.id}.`);
+        await loadQuoteWorkspace();
+        setMessage("quote-message", `Se emitió la cotización ${issued.id} y quedó guardada.`);
+        await loadDashboard();
+      } catch (error) {
+        setMessage("quote-message", error instanceof Error ? error.message : "No se pudo emitir la cotización.", true);
+      } finally {
+        quoteIssueButton.disabled = false;
+      }
+    });
+  }
+
+  document.getElementById("quote-add-line")?.addEventListener("click", () => {
+    const container = document.getElementById("quote-lines");
+    if (container !== null && quoteCatalog !== null) {
+      container.append(createQuoteLineRow());
+      invalidateQuoteProposal();
+    }
+  });
+  document.getElementById("quote-refresh")?.addEventListener("click", () => {
+    void loadQuoteWorkspace();
+  });
 
   const catalogQueryForm = document.getElementById("catalog-query-form");
   if (catalogQueryForm instanceof HTMLFormElement) {
@@ -526,12 +1030,19 @@
     setMessage("requests-message", message, true);
     setMessage("review-message", message, true);
   });
-  void loadCatalog();
+  void loadQuoteWorkspace();
+  void loadDashboard();
 
   window.addEventListener("hashchange", () => {
     const viewId = resolveViewFromHash();
     if (viewId !== null) {
       showView(viewId, true);
+      if (viewId === "panel") {
+        void loadDashboard();
+      }
+      if (viewId === "cotizaciones") {
+        void loadQuoteWorkspace();
+      }
     }
   });
 

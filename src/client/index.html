@@ -41,44 +41,50 @@
           <p class="lead">Vista general de los módulos de Mantia.</p>
         </header>
 
-        <p class="notice">
-          El panel de seguimiento y sus indicadores se implementarán en una etapa posterior.
-          Las solicitudes registradas ya se pueden consultar en los módulos Solicitudes y Revisión.
-        </p>
+        <p class="lead">Resumen de solicitudes y cotizaciones emitidas a partir de los registros guardados.</p>
 
-        <h3 class="section-title">Módulos</h3>
+        <p class="form-message" id="dashboard-message" role="status" aria-live="polite"></p>
+        <h3 class="section-title">Seguimiento</h3>
         <ul class="card-grid">
           <li class="card">
             <div class="card-head">
-              <h4>Solicitudes</h4>
-              <span class="badge">Disponible</span>
+              <h4>Solicitudes pendientes de revisión</h4>
+              <span class="badge dashboard-count" id="dashboard-pending-review" aria-live="polite">Cargando…</span>
             </div>
-            <p>Registre y consulte las solicitudes recibidas.</p>
-            <a class="card-link" href="#solicitudes">Ir a Solicitudes</a>
+            <p>Solicitudes nuevas que aún requieren revisión.</p>
+            <a class="card-link" href="#revision">Ver revisión</a>
           </li>
           <li class="card">
             <div class="card-head">
-              <h4>Revisión</h4>
-              <span class="badge">Disponible</span>
+              <h4>Solicitudes que requieren información</h4>
+              <span class="badge dashboard-count" id="dashboard-needs-information" aria-live="polite">Cargando…</span>
             </div>
-            <p>Valide las solicitudes y registre decisiones de revisión.</p>
-            <a class="card-link" href="#revision">Ir a Revisión</a>
+            <p>Casos pendientes de completar información.</p>
+            <a class="card-link" href="#revision">Ver revisión</a>
           </li>
           <li class="card">
             <div class="card-head">
-              <h4>Cotizaciones</h4>
-              <span class="badge">Sin datos</span>
+              <h4>Solicitudes aprobadas</h4>
+              <span class="badge dashboard-count" id="dashboard-approved" aria-live="polite">Cargando…</span>
             </div>
-            <p>Aún no hay cotizaciones generadas.</p>
-            <a class="card-link" href="#cotizaciones">Ir a Cotizaciones</a>
+            <p>Solicitudes aprobadas que pueden avanzar a cotización.</p>
+            <a class="card-link" href="#cotizaciones">Preparar cotización</a>
           </li>
           <li class="card">
             <div class="card-head">
-              <h4>Historial</h4>
-              <span class="badge">Sin datos</span>
+              <h4>Solicitudes rechazadas</h4>
+              <span class="badge dashboard-count" id="dashboard-rejected" aria-live="polite">Cargando…</span>
             </div>
-            <p>Aún no hay actividad registrada.</p>
-            <a class="card-link" href="#historial">Ir a Historial</a>
+            <p>Solicitudes que terminaron en estado rechazado.</p>
+            <a class="card-link" href="#solicitudes">Ver solicitudes</a>
+          </li>
+          <li class="card">
+            <div class="card-head">
+              <h4>Cotizaciones emitidas</h4>
+              <span class="badge dashboard-count" id="dashboard-issued-quotes" aria-live="polite">Cargando…</span>
+            </div>
+            <p>Cotizaciones guardadas y emitidas explícitamente por Mantia.</p>
+            <a class="card-link" href="#cotizaciones">Ver cotizaciones</a>
           </li>
         </ul>
       </section>
@@ -231,7 +237,7 @@
     </main>
 
     <footer class="app-footer">
-      <p>Mantia · Gestión local de solicitudes y revisión.</p>
+      <p>Mantia · Gestión local de solicitudes, revisión y cotizaciones.</p>
     </footer>
   </div>
 </body>

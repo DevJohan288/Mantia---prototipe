@@ -80,6 +80,19 @@ test("rechaza IDs duplicados y conserva el registro original", async (context) =
   assert.deepEqual(await repository.list(), [original]);
 });
 
+test("rechaza una segunda cotización para una solicitud ya emitida", async (context) => {
+  const directory = await mkdtemp(join(tmpdir(), "mantia-quotes-"));
+  context.after(() => rm(directory, { recursive: true, force: true }));
+  const repository = new JsonQuoteRepository(join(directory, "quotes.json"));
+  const original = issuedQuote();
+  await repository.append(original);
+  await assert.rejects(
+    repository.append({ ...original, id: "another-quote-id" }),
+    /ya tiene una cotización emitida/,
+  );
+  assert.deepEqual(await repository.list(), [original]);
+});
+
 test("rechaza corrupción JSON en vez de responder como una colección vacía", async (context) => {
   const directory = await mkdtemp(join(tmpdir(), "mantia-quotes-"));
   context.after(() => rm(directory, { recursive: true, force: true }));

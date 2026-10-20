@@ -21,6 +21,25 @@ test("la página principal integra la navegación y vista del catálogo", () => 
   assert.match(html, /catalog-query-form/);
 });
 
+test("el panel incluye contadores para estados persistidos y enlaces a sus módulos", () => {
+  const html = readFileSync(resolveStaticPath("/"), "utf8");
+  assert.match(html, /id="dashboard-pending-review"/);
+  assert.match(html, /id="dashboard-needs-information"/);
+  assert.match(html, /id="dashboard-approved"/);
+  assert.match(html, /id="dashboard-rejected"/);
+  assert.match(html, /id="dashboard-issued-quotes"/);
+  assert.match(html, /id="dashboard-message"/);
+});
+
+test("la vista de cotizaciones integra preparación, cálculo y emisión explícita", () => {
+  const html = readFileSync(resolveStaticPath("/"), "utf8");
+  assert.match(html, /data-nav="cotizaciones"/);
+  assert.match(html, /id="quote-form"/);
+  assert.match(html, /id="quote-calculate"/);
+  assert.match(html, /id="quote-issue"/);
+  assert.match(html, /id="issued-quotes-list"/);
+});
+
 test("permite CSS y JavaScript compilado del cliente", () => {
   assert.ok(resolveStaticPath("/css/main.css")?.endsWith("main.css"));
   assert.ok(resolveStaticPath("/js/main.js")?.endsWith("main.js"));
@@ -32,6 +51,9 @@ test("compila el script del navegador sin envoltorio CommonJS", () => {
   assert.doesNotMatch(script, /\bexports\./);
   assert.match(script, /addEventListener\("hashchange"/);
   assert.match(script, /getElementById\("request-form"\)/);
+  assert.match(script, /requestApi\("\/api\/requests"\)/);
+  assert.match(script, /requestApi\("\/api\/quotes"\)/);
+  assert.match(script, /counts\[request\.status\] \+= 1/);
 });
 
 test("bloquea carpetas y archivos internos", () => {

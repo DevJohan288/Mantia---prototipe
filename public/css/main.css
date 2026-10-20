@@ -246,6 +246,17 @@ body {
   font-weight: 600;
 }
 
+.dashboard-count {
+  min-width: 2.25rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #ffffff;
+  font-size: 1rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .empty-state {
   padding: 2.5rem 1.5rem;
   border: 2px dashed var(--color-border);
