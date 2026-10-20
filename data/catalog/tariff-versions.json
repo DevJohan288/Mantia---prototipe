@@ -1,0 +1,30 @@
+[
+  {
+    "id": "2026-01",
+    "validFrom": "2026-01-01",
+    "validThrough": "2026-09-30",
+    "tariffs": [
+      { "serviceCode": "AA-01", "amountCop": 90000 },
+      { "serviceCode": "AA-02", "amountCop": 70000 },
+      { "serviceCode": "PI-01", "amountCop": 13000 },
+      { "serviceCode": "PL-01", "amountCop": 60000 },
+      { "serviceCode": "EL-01", "amountCop": 45000 },
+      { "serviceCode": "DES-BOG", "amountCop": 25000 },
+      { "serviceCode": "DES-CHI", "amountCop": 50000 }
+    ]
+  },
+  {
+    "id": "2026-10",
+    "validFrom": "2026-10-01",
+    "validThrough": "2026-12-31",
+    "tariffs": [
+      { "serviceCode": "AA-01", "amountCop": 95000 },
+      { "serviceCode": "AA-02", "amountCop": 75000 },
+      { "serviceCode": "PI-01", "amountCop": 14000 },
+      { "serviceCode": "PL-01", "amountCop": 65000 },
+      { "serviceCode": "EL-01", "amountCop": 50000 },
+      { "serviceCode": "DES-BOG", "amountCop": 30000 },
+      { "serviceCode": "DES-CHI", "amountCop": 60000 }
+    ]
+  }
+]

@@ -14,6 +14,13 @@ test("sirve la página principal", () => {
   assert.ok(resolveStaticPath("/setup.html")?.endsWith("login.html"));
 });
 
+test("la página principal integra la navegación y vista del catálogo", () => {
+  const html = readFileSync(resolveStaticPath("/"), "utf8");
+  assert.match(html, /data-nav="catalogo"/);
+  assert.match(html, /data-view="catalogo"/);
+  assert.match(html, /catalog-query-form/);
+});
+
 test("permite CSS y JavaScript compilado del cliente", () => {
   assert.ok(resolveStaticPath("/css/main.css")?.endsWith("main.css"));
   assert.ok(resolveStaticPath("/js/main.js")?.endsWith("main.js"));

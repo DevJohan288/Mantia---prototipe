@@ -1,0 +1,44 @@
+[
+  {
+    "code": "AA-01",
+    "name": "Mantenimiento preventivo de aire acondicionado split hasta 24.000 BTU",
+    "unit": "equipment",
+    "category": "service"
+  },
+  {
+    "code": "AA-02",
+    "name": "Diagnóstico de aire acondicionado split hasta 24.000 BTU",
+    "unit": "equipment",
+    "category": "service"
+  },
+  {
+    "code": "PI-01",
+    "name": "Pintura interior con materiales suministrados por el cliente",
+    "unit": "square_meter",
+    "category": "service"
+  },
+  {
+    "code": "PL-01",
+    "name": "Cambio simple de grifería, repuesto suministrado por el cliente",
+    "unit": "unit",
+    "category": "service"
+  },
+  {
+    "code": "EL-01",
+    "name": "Inspección de punto eléctrico",
+    "unit": "point",
+    "category": "service"
+  },
+  {
+    "code": "DES-BOG",
+    "name": "Desplazamiento en Bogotá",
+    "unit": "visit",
+    "category": "travel"
+  },
+  {
+    "code": "DES-CHI",
+    "name": "Desplazamiento en Chía",
+    "unit": "visit",
+    "category": "travel"
+  }
+]

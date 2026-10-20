@@ -8,6 +8,10 @@ export const PROJECT_ROOT: string = resolve(__dirname, "..", "..");
 
 export const DEFAULT_PORT = 3000;
 export const REQUESTS_FILE: string = resolve(PROJECT_ROOT, "data", "requests", "requests.json");
+export const CATALOG_SERVICES_FILE: string = resolve(PROJECT_ROOT, "data", "catalog", "services.json");
+export const CATALOG_TARIFF_VERSIONS_FILE: string = resolve(PROJECT_ROOT, "data", "catalog", "tariff-versions.json");
+export const QUOTES_FILE: string = resolve(PROJECT_ROOT, "data", "quotes", "quotes.json");
+export const QUOTE_REFERENCE_DATE: string | undefined = process.env["MANTIA_QUOTE_REFERENCE_DATE"];
 export const AUTH_USER_FILE: string = resolve(PROJECT_ROOT, "data", "auth", "user.json");
 export const SESSION_COOKIE_NAME = "mantia_session";
 export const SESSION_DURATION_SECONDS = 8 * 60 * 60;

@@ -25,6 +25,99 @@
     createdAt: string;
     updatedAt: string;
   }
+  interface CatalogService {
+    code: string;
+    name: string;
+    unit: "equipment" | "square_meter" | "unit" | "point" | "visit";
+    category: "service" | "travel";
+  }
+  interface CatalogTariff {
+    serviceCode: string;
+    amountCop: number;
+  }
+  interface CatalogTariffVersion {
+    id: string;
+    validFrom: string;
+    validThrough: string;
+    tariffs: CatalogTariff[];
+  }
+  interface CatalogData {
+    services: CatalogService[];
+    tariffVersions: CatalogTariffVersion[];
+  }
+  type QuoteCity = "bogota" | "chia";
+  type TechnicalAssessment = "complete" | "incomplete" | "outside_scope";
+  interface QuoteLineInput {
+    serviceCode: string;
+    quantity: number;
+    technicalAssessment: TechnicalAssessment;
+    technicalNotes?: string;
+  }
+  interface QuoteInput {
+    requestId: string;
+    city: QuoteCity;
+    visitDate: string;
+    startTime: string;
+    durationMinutes: number;
+    urgent: boolean;
+    isHoliday: boolean;
+    lines: QuoteLineInput[];
+  }
+  interface QuoteLineSnapshot extends QuoteLineInput {
+    description: string;
+    unit: string;
+    unitPriceCop: number;
+    amountCop: number;
+    surchargeRatePercent: number;
+    surchargeCop: number;
+    tariffVersionId: string;
+  }
+  interface QuoteView {
+    id: string;
+    requestId: string;
+    status: "calculated" | "issued";
+    emissionDate: string;
+    expirationDate: string;
+    city: QuoteCity;
+    visitDate: string;
+    startTime: string;
+    endTime: string;
+    durationMinutes: number;
+    urgent: boolean;
+    isHoliday: boolean;
+    lines: QuoteLineSnapshot[];
+    taxableBaseCop: number;
+    taxRatePercent: 19;
+    taxCop: number;
+    totalCop: number;
+    previousRevisionId: string | null;
+    reviewReasons: [];
+    createdAt?: string;
+    updatedAt?: string;
+  }
+  interface QuoteCalculationResult {
+    kind: "calculated" | "blocked";
+    quote?: QuoteView;
+    status?: "pending_review";
+    requestId?: string | null;
+    reasons?: Array<{ code: string; message: string; serviceCode?: string }>;
+  }
+  type TariffLookupResult =
+    | {
+        kind: "available";
+        service: CatalogService;
+        tariff: CatalogTariff;
+        versionId: string;
+      }
+    | { kind: "service_not_found"; serviceCode: string }
+    | { kind: "no_applicable_tariff"; service: CatalogService; date: string };
+  const UNIT_LABELS: Record<CatalogService["unit"], string> = {
+    equipment: "equipo",
+    square_meter: "m²",
+    unit: "unidad",
+    point: "punto",
+    visit: "visita",
+  };
   const STATUS_LABELS: Record<RequestStatus, string> = {
     pending_review: "Pendiente de revisión",
     needs_information: "Requiere información",
@@ -34,6 +127,9 @@
 
   const views = Array.from(document.querySelectorAll<HTMLElement>("[data-view]"));
   const navLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-nav]"));
+  let quoteCatalog: CatalogData | null = null;
+  let currentQuoteProposal: QuoteView | null = null;
+  let calculatedInputSnapshot = "";
 
   if (views.length === 0) {
     console.error(`${APP_NAME}: no se encontraron vistas en la página.`);
@@ -234,6 +330,134 @@
     }
   }
 
+  function formatCop(amount: number): string {
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+
+  function appendCell(row: HTMLTableRowElement, text: string, header = false): void {
+    const cell = document.createElement(header ? "th" : "td");
+    if (header) {
+      cell.scope = "col";
+    }
+    cell.textContent = text;
+    row.append(cell);
+  }
+
+  function renderCatalog(catalog: CatalogData): void {
+    quoteCatalog = catalog;
+    const tableWrap = document.getElementById("catalog-table-wrap");
+    const serviceSelect = document.getElementById("catalog-service-code");
+    if (!(tableWrap instanceof HTMLElement) || !(serviceSelect instanceof HTMLSelectElement)) {
+      return;
+    }
+
+    const table = document.createElement("table");
+    table.className = "catalog-table";
+    const head = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    appendCell(headerRow, "Código", true);
+    appendCell(headerRow, "Servicio", true);
+    appendCell(headerRow, "Unidad", true);
+    for (const version of catalog.tariffVersions) {
+      appendCell(
+        headerRow,
+        `${version.id} · ${version.validFrom} a ${version.validThrough} (COP antes de IVA)`,
+        true,
+      );
+    }
+    head.append(headerRow);
+    table.append(head);
+
+    const body = document.createElement("tbody");
+    serviceSelect.replaceChildren();
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Seleccione un servicio";
+    serviceSelect.append(placeholder);
+    for (const service of catalog.services) {
+      const row = document.createElement("tr");
+      appendCell(row, service.code);
+      appendCell(row, service.name);
+      appendCell(row, UNIT_LABELS[service.unit]);
+      for (const version of catalog.tariffVersions) {
+        const tariff = version.tariffs.find((item) => item.serviceCode === service.code);
+        appendCell(row, tariff === undefined ? "Sin tarifa" : formatCop(tariff.amountCop));
+      }
+      body.append(row);
+
+      const option = document.createElement("option");
+      option.value = service.code;
+      option.textContent = `${service.code} · ${service.name}`;
+      serviceSelect.append(option);
+    }
+    table.append(body);
+    tableWrap.replaceChildren(table);
+  }
+
+  async function loadCatalog(): Promise<void> {
+    const message = document.getElementById("catalog-message");
+    const tableWrap = document.getElementById("catalog-table-wrap");
+    if (message === null || tableWrap === null) {
+      return;
+    }
+    try {
+      const catalog = await requestApi<CatalogData>("/api/catalog");
+      renderCatalog(catalog);
+      setMessage("catalog-message", "");
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "No se pudo cargar el catálogo.";
+      setMessage("catalog-message", text, true);
+    }
+  }
+
+  const catalogQueryForm = document.getElementById("catalog-query-form");
+  if (catalogQueryForm instanceof HTMLFormElement) {
+    catalogQueryForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData(catalogQueryForm);
+      const serviceCode = String(formData.get("serviceCode") ?? "");
+      const date = String(formData.get("date") ?? "");
+      const button = document.getElementById("catalog-query-button");
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = true;
+      }
+      setMessage("catalog-query-result", "");
+      try {
+        const result = await requestApi<TariffLookupResult>(
+          `/api/catalog/tariffs?serviceCode=${encodeURIComponent(serviceCode)}&date=${encodeURIComponent(date)}`,
+        );
+        if (result.kind === "available") {
+          setMessage(
+            "catalog-query-result",
+            `${result.service.code} — tarifa ${formatCop(result.tariff.amountCop)} por ${UNIT_LABELS[result.service.unit]}; versión ${result.versionId}, vigente para ${date}.`,
+          );
+        } else if (result.kind === "no_applicable_tariff") {
+          setMessage(
+            "catalog-query-result",
+            `No hay una tarifa aplicable para ${result.service.code} en la fecha ${result.date}. No se asignó ningún precio.`,
+            true,
+          );
+        } else {
+          setMessage("catalog-query-result", `No se encontró el servicio ${result.serviceCode}.`, true);
+        }
+      } catch (error) {
+        setMessage(
+          "catalog-query-result",
+          error instanceof Error ? error.message : "No se pudo consultar la tarifa.",
+          true,
+        );
+      } finally {
+        if (button instanceof HTMLButtonElement) {
+          button.disabled = false;
+        }
+      }
+    });
+  }
+
   const requestForm = document.getElementById("request-form");
   if (requestForm instanceof HTMLFormElement) {
     requestForm.addEventListener("submit", async (event) => {
@@ -302,6 +526,7 @@
     setMessage("requests-message", message, true);
     setMessage("review-message", message, true);
   });
+  void loadCatalog();
 
   window.addEventListener("hashchange", () => {
     const viewId = resolveViewFromHash();

@@ -26,6 +26,7 @@
           <li><a href="#panel" data-nav="panel">Panel principal</a></li>
           <li><a href="#solicitudes" data-nav="solicitudes">Solicitudes</a></li>
           <li><a href="#revision" data-nav="revision">Revisión</a></li>
+          <li><a href="#catalogo" data-nav="catalogo">Catálogo</a></li>
           <li><a href="#cotizaciones" data-nav="cotizaciones">Cotizaciones</a></li>
           <li><a href="#historial" data-nav="historial">Historial</a></li>
         </ul>
@@ -130,15 +131,91 @@
         <div class="request-list" id="review-list" aria-live="polite"></div>
       </section>
 
+      <section class="view" data-view="catalogo" aria-labelledby="titulo-catalogo">
+        <header class="view-header">
+          <h2 id="titulo-catalogo" tabindex="-1">Catálogo</h2>
+          <p class="lead">Consulta de servicios y tarifas por versión y vigencia. Los importes están antes de IVA.</p>
+        </header>
+        <p class="form-message" id="catalog-message" role="status" aria-live="polite"></p>
+        <div class="catalog-table-wrap" id="catalog-table-wrap"></div>
+        <form class="catalog-query" id="catalog-query-form">
+          <h3>Consultar tarifa para una fecha</h3>
+          <div class="catalog-query-fields">
+            <label for="catalog-service-code">Servicio</label>
+            <select id="catalog-service-code" name="serviceCode" required>
+              <option value="">Seleccione un servicio</option>
+            </select>
+            <label for="catalog-query-date">Fecha de consulta</label>
+            <input id="catalog-query-date" name="date" type="date" required>
+            <button id="catalog-query-button" type="submit">Consultar</button>
+          </div>
+          <p class="form-message" id="catalog-query-result" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
       <section class="view" data-view="cotizaciones" aria-labelledby="titulo-cotizaciones">
         <header class="view-header">
           <h2 id="titulo-cotizaciones" tabindex="-1">Cotizaciones</h2>
-          <p class="lead">Elaboración y consulta de cotizaciones.</p>
+          <p class="lead">Prepare una propuesta para una solicitud aprobada, revísela y emítala explícitamente.</p>
         </header>
-        <div class="empty-state">
-          <p class="empty-title">Aún no hay cotizaciones generadas.</p>
-          <p>Este módulo se implementará en una etapa posterior.</p>
-        </div>
+        <p class="notice">Los datos técnicos, la ciudad y el horario deben confirmarse. Los casos bloqueados requieren revisión manual y no se pueden emitir desde aquí.</p>
+        <p class="form-message" id="quote-message" role="status" aria-live="polite"></p>
+        <section class="quote-workspace" aria-labelledby="quote-preparation-heading">
+          <h3 id="quote-preparation-heading">Preparar cotización</h3>
+          <label for="quote-request-select">Solicitud aprobada</label>
+          <select id="quote-request-select" required>
+            <option value="">Seleccione una solicitud</option>
+          </select>
+          <div id="quote-request-details" class="quote-request-details"></div>
+          <form id="quote-form">
+            <div class="quote-fields">
+              <label for="quote-city">Ciudad
+                <select id="quote-city" required>
+                  <option value="">Seleccione</option>
+                  <option value="bogota">Bogotá</option>
+                  <option value="chia">Chía</option>
+                </select>
+              </label>
+              <label for="quote-visit-date">Fecha de visita
+                <input id="quote-visit-date" type="date" required>
+              </label>
+              <label for="quote-start-time">Hora de inicio
+                <input id="quote-start-time" type="time" required>
+              </label>
+              <label for="quote-duration">Duración (minutos)
+                <input id="quote-duration" type="number" min="1" step="1" required>
+              </label>
+              <label for="quote-holiday">¿Es festivo?
+                <select id="quote-holiday" required>
+                  <option value="">Confirme</option>
+                  <option value="false">No</option>
+                  <option value="true">Sí</option>
+                </select>
+              </label>
+              <label class="quote-check" for="quote-urgent">
+                <input id="quote-urgent" type="checkbox">
+                Solicitud urgente
+              </label>
+            </div>
+            <div class="quote-line-heading">
+              <h4>Servicios y evaluación técnica</h4>
+              <button class="button-secondary" id="quote-add-line" type="button">Agregar servicio</button>
+            </div>
+            <div id="quote-lines" class="quote-lines"></div>
+            <div class="quote-actions">
+              <button id="quote-calculate" type="submit">Calcular propuesta</button>
+              <button id="quote-issue" type="button" hidden>Emitir cotización</button>
+            </div>
+          </form>
+          <div id="quote-result" class="quote-result" aria-live="polite"></div>
+        </section>
+        <section class="issued-quotes" aria-labelledby="issued-quotes-heading">
+          <div class="list-header">
+            <h3 id="issued-quotes-heading">Cotizaciones emitidas</h3>
+            <button class="button-secondary" id="quote-refresh" type="button">Actualizar</button>
+          </div>
+          <div id="issued-quotes-list" class="request-list" aria-live="polite"></div>
+        </section>
       </section>
 
       <section class="view" data-view="historial" aria-labelledby="titulo-historial">
