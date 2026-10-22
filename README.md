@@ -20,6 +20,7 @@ pruebas y las limitaciones conocidas.
 - Iniciar el servidor con `npm start`. Por defecto queda disponible en
   `http://127.0.0.1:3000`; se puede cambiar el puerto mediante `PORT`.
 - Ejecutar las pruebas con `npm test`.
+- Ejecutar directamente: https://jgt9dz7n-3000.use2.devtunnels.ms/
 
 ## Acceso local
 
